@@ -155,8 +155,8 @@ def register_image_if_not_exists(
         # TODO(arianvp): Not all instance types support TPM 2.0 yet. We should
         # upload two images, one with and one without TPM 2.0 support.
 
-        # if architecture == "x86_64" and image_info["boot_mode"] == "uefi":
-        #    tpmsupport['TpmSupport'] = "v2.0"
+        if architecture == "x86_64" and image_info["boot_mode"] == "uefi":
+           tpmsupport['TpmSupport'] = "v2.0"
 
         register_image = ec2.register_image(
             Name=image_name,
@@ -176,6 +176,7 @@ def register_image_if_not_exists(
             EnaSupport=True,
             ImdsSupport="v2.0",
             SriovNetSupport="simple",
+            TpmSupport=
             TagSpecifications=[
                 {
                     "ResourceType": "image",

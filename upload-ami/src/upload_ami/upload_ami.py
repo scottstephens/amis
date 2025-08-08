@@ -39,7 +39,17 @@ def upload_to_s3_if_not_exists(
         s3.head_object(Bucket=bucket, Key=image_name)
     except botocore.exceptions.ClientError:
         logging.info(f"Uploading {file_path} to s3://{bucket}/{image_name}")
-        s3.upload_file(str(file_path), bucket, image_name)
+        
+        file_size = file_path.stat().st_size
+        uploaded_bytes = 0
+        
+        def progress_callback(bytes_transferred: int) -> None:
+            nonlocal uploaded_bytes
+            uploaded_bytes += bytes_transferred
+            percent = (uploaded_bytes / file_size) * 100
+            logging.info(f"Upload progress: {percent:.1f}% ({uploaded_bytes}/{file_size} bytes)")
+        
+        s3.upload_file(str(file_path), bucket, image_name, Callback=progress_callback)
         s3.get_waiter("object_exists").wait(Bucket=bucket, Key=image_name)
 
 
@@ -127,6 +137,7 @@ def register_image_if_not_exists(
     image_info: ImageInfo,
     snapshot_id: str,
     public: bool,
+    enable_tpm: bool,
 ) -> str:
     """
     Register image if it doesn't exist yet
